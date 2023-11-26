@@ -43,6 +43,11 @@ public class RedirectToUrlCommandHandler : IRequestHandler<RedirectToUrlCommand,
             throw new NotFoundException("This entry does not exist!");
         }
 
+        if (!Uri.TryCreate(shortCodeDbObject.OriginalUrl, UriKind.Absolute, out _))
+        {
+            throw new NotFoundException("Bad Redirect URL!  Please try recreate your short URL!");
+        }
+
         return shortCodeDbObject.OriginalUrl;
 
     }

@@ -1,12 +1,7 @@
-﻿using System.Net.Http;
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
-using System.Web;
-using FluentValidation;
+﻿using FluentValidation;
 using HashidsNet;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using UrlShortenerService.Application.Common.Exceptions;
 using UrlShortenerService.Application.Common.Interfaces;
 
 namespace UrlShortenerService.Application.Url.Commands;
@@ -14,7 +9,7 @@ namespace UrlShortenerService.Application.Url.Commands;
 public record CreateShortUrlCommand : IRequest<string>
 {
     public string Url { get; init; } = default!;
-    public string? EndpointUrl {  get; init; } = default!;
+    public string? HostUrl {  get; init; } = default!;
 }
 
 public class CreateShortUrlCommandValidator : AbstractValidator<CreateShortUrlCommand>
@@ -24,7 +19,22 @@ public class CreateShortUrlCommandValidator : AbstractValidator<CreateShortUrlCo
         _ = RuleFor(v => v.Url)
           .NotEmpty()
           .WithMessage("Url is required.");
-        // Should possible do Url validity check here?
+        _ = RuleFor(v => v.Url)
+            .Custom((url, context) =>
+            {
+                if (!Uri.TryCreate(url, UriKind.Absolute, out _))
+                {
+                    context.AddFailure("Bad URL Provided");
+                }
+            });
+        _ = RuleFor(v => v.HostUrl)
+            .Custom((url, context) =>
+            {
+                if (!Uri.TryCreate(url, UriKind.Absolute, out _))
+                {
+                    context.AddFailure("Error Handling Host URL");
+                }
+            });
     }
 }
 
@@ -45,22 +55,13 @@ public class CreateShortUrlCommandHandler : IRequestHandler<CreateShortUrlComman
     {
         await Task.CompletedTask;
 
-        if (!Uri.TryCreate(request.Url, UriKind.Absolute, out _))
-        {
-            throw new NotFoundException("Bad URL provided");
-        }
-        if (!Uri.TryCreate(request.EndpointUrl, UriKind.Absolute, out _))
-        {
-            throw new NotFoundException("Error Handling Host URL");
-        }
-
         while (true)
         {
             string shortCode = CreateShortCode(5);
             // Fetching information from Db in a while-loop seems expensive, investigate something more efficient.
             if (!await _context.Urls.AnyAsync(s => s.ShortCode == shortCode))
             {
-                string shortUrl = request.EndpointUrl + "/" + shortCode;
+                string shortUrl = request.HostUrl + "/" + shortCode;
                 _ = await _context.Urls.AddAsync(new Domain.Entities.Url()
                 {
                     OriginalUrl = request.Url,

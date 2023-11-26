@@ -37,16 +37,16 @@ public class CreateShortUrlEndpoint : BaseEndpoint<CreateShortUrlRequest>
     {
         // Not super happy with this way of accessing the host url
         IHttpContextAccessor httpContextAccessor = new HttpContextAccessor();
-        string endpointUrl = "";
+        string hostUrl = "";
         if (httpContextAccessor.HttpContext != null)
         {
-            endpointUrl = httpContextAccessor.HttpContext.Request.GetDisplayUrl();
+            hostUrl = httpContextAccessor.HttpContext.Request.GetDisplayUrl();
         }
         var result = await Mediator.Send(
             new CreateShortUrlCommand
             {
                 Url = req.Url,
-                EndpointUrl = endpointUrl
+                HostUrl = hostUrl
             },
             ct
         );

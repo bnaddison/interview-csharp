@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using UrlShortenerService.Api.Endpoints.Url.Requests;
 using UrlShortenerService.Application.Url.Commands;
 using IMapper = AutoMapper.IMapper;
