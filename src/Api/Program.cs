@@ -1,4 +1,4 @@
-using FastEndpoints.Swagger;
+﻿using FastEndpoints.Swagger;
 using UrlShortenerService.Api.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +14,7 @@ if (builder.Environment.IsDevelopment())
 _ = builder.Services.AddApplicationServices();
 _ = builder.Services.AddInfrastructureServices(builder.Configuration);
 _ = builder.Services.AddApiServices(builder.Configuration);
+_ = builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddSwaggerDoc(maxEndpointVersion: 1, tagIndex: 0, settings: x =>
 {

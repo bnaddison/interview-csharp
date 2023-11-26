@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 using HashidsNet;
 using MediatR;
 using UrlShortenerService.Application.Common.Interfaces;

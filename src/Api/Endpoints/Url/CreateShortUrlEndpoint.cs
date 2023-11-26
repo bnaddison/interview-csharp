@@ -1,4 +1,5 @@
-using MediatR;
+﻿using MediatR;
+using Microsoft.AspNetCore.Http.Extensions;
 using UrlShortenerService.Api.Endpoints.Url.Requests;
 using UrlShortenerService.Application.Url.Commands;
 using IMapper = AutoMapper.IMapper;
@@ -34,10 +35,13 @@ public class CreateShortUrlEndpoint : BaseEndpoint<CreateShortUrlRequest>
 
     public override async Task HandleAsync(CreateShortUrlRequest req, CancellationToken ct)
     {
+        IHttpContextAccessor httpContextAccessor = new HttpContextAccessor();
+        string endpointUrl = httpContextAccessor.HttpContext.Request.GetDisplayUrl();
         var result = await Mediator.Send(
             new CreateShortUrlCommand
             {
-                Url = req.Url
+                Url = req.Url,
+                EndpointUrl = endpointUrl
             },
             ct
         );
