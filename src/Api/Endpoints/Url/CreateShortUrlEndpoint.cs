@@ -35,8 +35,13 @@ public class CreateShortUrlEndpoint : BaseEndpoint<CreateShortUrlRequest>
 
     public override async Task HandleAsync(CreateShortUrlRequest req, CancellationToken ct)
     {
+        // Not super happy with this way of accessing the host url
         IHttpContextAccessor httpContextAccessor = new HttpContextAccessor();
-        string endpointUrl = httpContextAccessor.HttpContext.Request.GetDisplayUrl();
+        string endpointUrl = "";
+        if (httpContextAccessor.HttpContext != null)
+        {
+            endpointUrl = httpContextAccessor.HttpContext.Request.GetDisplayUrl();
+        }
         var result = await Mediator.Send(
             new CreateShortUrlCommand
             {

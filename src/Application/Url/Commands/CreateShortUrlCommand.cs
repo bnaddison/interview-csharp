@@ -14,7 +14,7 @@ namespace UrlShortenerService.Application.Url.Commands;
 public record CreateShortUrlCommand : IRequest<string>
 {
     public string Url { get; init; } = default!;
-    public string EndpointUrl {  get; init; } = default!;
+    public string? EndpointUrl {  get; init; } = default!;
 }
 
 public class CreateShortUrlCommandValidator : AbstractValidator<CreateShortUrlCommand>
@@ -45,11 +45,15 @@ public class CreateShortUrlCommandHandler : IRequestHandler<CreateShortUrlComman
     {
         await Task.CompletedTask;
 
-        Uri longUrl;
-        if (!Uri.TryCreate(request.Url, UriKind.Absolute, out longUrl))
+        if (!Uri.TryCreate(request.Url, UriKind.Absolute, out _))
         {
-            throw new NotFoundException("bad url provided");
+            throw new NotFoundException("Bad URL provided");
         }
+        if (!Uri.TryCreate(request.EndpointUrl, UriKind.Absolute, out _))
+        {
+            throw new NotFoundException("Error Handling Host URL");
+        }
+
         while (true)
         {
             string shortCode = CreateShortCode(5);
@@ -57,7 +61,7 @@ public class CreateShortUrlCommandHandler : IRequestHandler<CreateShortUrlComman
             if (!await _context.Urls.AnyAsync(s => s.ShortCode == shortCode))
             {
                 string shortUrl = request.EndpointUrl + "/" + shortCode;
-                _ = _context.Urls.Add(new Domain.Entities.Url()
+                _ = await _context.Urls.AddAsync(new Domain.Entities.Url()
                 {
                     OriginalUrl = request.Url,
                     ShortCode = shortCode,
@@ -74,9 +78,11 @@ public class CreateShortUrlCommandHandler : IRequestHandler<CreateShortUrlComman
         string urlSafeChars = "abcdefghijklmnopqrstuvwxwzABCDEFGHIJKLMNOPQRSTUVWXWZ0123456789-_.~";
         string shortCodeResult = "";
 
-        for (int i = 0; i < shortStringLength; i++)
+        int i = 0;
+        while (i < shortStringLength)
         {
             shortCodeResult += urlSafeChars[_random.Next(urlSafeChars.Length) - 1];
+            i++;
         }
         return shortCodeResult;
     }
